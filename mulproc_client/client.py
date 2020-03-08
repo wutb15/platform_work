@@ -29,7 +29,7 @@ def main(argv):
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('test.py -i <inputfile> -o <outputfile>')
+            print('client.py -t <threadnumber> -i <imgfile>')
             sys.exit()
         elif opt in ("-t", "--threadnumber"):
             threadnumber = int(arg)
