@@ -13,7 +13,8 @@ def img_req(imgfile, uri):
     ts = time.time()
     payload = {'ts': ts, 'url': imgfile}
     resp = requests.post(uri, data=payload)
-    return resp
+    print(resp.text)
+    return resp.text
 
 
 def main(argv):
