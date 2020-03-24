@@ -10,11 +10,7 @@ import queue
 from concurrent.futures import Future
 import requests
 import json
-count = 0
-batchsize = 200
 request_queue = queue.Queue()
-executing_queue = queue.Queue(batchsize)
-logfilename = 'time.json'
 mu = threading.Lock()
 
 app = Flask(__name__)
@@ -91,13 +87,6 @@ class workerThread(threading.Thread):
         resp_ts = time.time()
         ts_diff = resp_ts - rec_ts
         feed_back = {'rec_ts': rec_ts, 'resp_ts': resp_ts, 'ts_diff': ts_diff}
-        logfilename = 'time.json'
-        if mu.acquire(True):
-            with open(logfilename, 'a') as logfile:
-                json.dump(feed_back, logfile)
-                logfile.write('\n')
-            mu.release()
-        print('decode complete\n')
         return feed_back
 
 
@@ -107,4 +96,4 @@ if __name__ == '__main__':
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
-    app.run()
+    app.run(host='0.0.0.0',port=80)
