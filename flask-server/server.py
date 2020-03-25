@@ -7,11 +7,11 @@ import cv2
 import time
 import threading
 import queue
-from concurrent.futures import Future
-import requests
+from concurrent.futures import Future, ThreadPoolExecutor
 import json
+
+count = 0
 request_queue = queue.Queue()
-mu = threading.Lock()
 
 app = Flask(__name__)
 
@@ -21,10 +21,9 @@ def test():
     future = Future()
     ts = request.form['ts']
     img_url = request.form['url']
-    request_queue.put((future, img_url, ts), block=True, timeout=5)
-    rsp = future.result(timeout=5)
-    print('receive rsp\n')
-    print(rsp)
+    request_queue.put((future, img_url, ts), block=True, timeout=10)
+    rsp = future.result(timeout=10)
+    print('receive rsp\n')  # debug information
     return json.dumps(rsp)
 
 
@@ -37,7 +36,7 @@ class workerThread(threading.Thread):
 
     def run(self):
         self._is_started = 1
-        print('worker running\n')
+        print('worker running\n')  # debug information
         self._worker()
 
     def _worker(self):
@@ -54,13 +53,12 @@ class workerThread(threading.Thread):
                         future_list.append(future)
                         img_url_list.append(img_url)
                         recieve_ts_list.append(rec_ts)
-                        n = n-1
+                        n = n - 1
 
                     model_result_list = self._do_business(img_url_list, recieve_ts_list)
-                    print('get results\n')
                     for i in range(len(model_result_list)):
                         future_list[i].set_result(model_result_list[i])
-                        print('set results\n')
+                        print('set results\n')  # debug information
                 except queue.Empty:
                     if len(future_list) == 0:
                         time.sleep(0.1)
@@ -68,14 +66,19 @@ class workerThread(threading.Thread):
             except Exception as e:
                 continue
 
-
-    def _do_business(self,img_url_list, recieve_ts_list):
+    def _do_business(self, img_url_list, recieve_ts_list):
         result_list = []
+        executor = ThreadPoolExecutor(self._batch_size)
+        for result in executor.map(self._img_decode, img_url_list, recieve_ts_list):  # multithread process
+            result_list.append(result)
+
+        '''
         for i in range(len(img_url_list)):
             img_url = img_url_list[i]
             rec_ts = recieve_ts_list[i]
             result = self._img_decode(img_url, rec_ts)
             result_list.append(result)
+        '''
         return result_list
 
     def _img_decode(self, img_url, rec_ts):
@@ -90,10 +93,9 @@ class workerThread(threading.Thread):
         return feed_back
 
 
-
 if __name__ == '__main__':
     batchsize = 10
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
-    app.run(host='0.0.0.0',port=80)
+    app.run()
