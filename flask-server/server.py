@@ -94,8 +94,8 @@ class workerThread(threading.Thread):
 
 
 if __name__ == '__main__':
-    batchsize = 10
+    batchsize = 20
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
-    app.run()
+    app.run(threaded=True, port=80)
