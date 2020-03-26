@@ -10,7 +10,6 @@ import queue
 from concurrent.futures import Future, ThreadPoolExecutor
 import json
 
-count = 0
 request_queue = queue.Queue()
 
 app = Flask(__name__)
@@ -62,6 +61,11 @@ class workerThread(threading.Thread):
                 except queue.Empty:
                     if len(future_list) == 0:
                         time.sleep(0.1)
+                    else:# early processing
+                        model_result_list = self._do_business(img_url_list, recieve_ts_list)
+                        for i in range(len(model_result_list)):
+                            future_list[i].set_result(model_result_list[i])
+                            print('set results\n')  # debug information
                     continue
             except Exception as e:
                 continue
@@ -94,8 +98,8 @@ class workerThread(threading.Thread):
 
 
 if __name__ == '__main__':
-    batchsize = 20
+    batchsize = 10
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
-    app.run(threaded=True, port=80,host='0.0.0.0')
+    app.run(threaded=True, port=80, host='0.0.0.0')
