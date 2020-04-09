@@ -9,6 +9,7 @@ import threading
 import queue
 from concurrent.futures import Future, ThreadPoolExecutor
 import json
+import argparse
 
 request_queue = queue.Queue()
 
@@ -32,7 +33,7 @@ class workerThread(threading.Thread):
         self._batch_size = _batch_size
         self._is_started = 0
         self._req_queue = request_queue
-        self._executor  = ThreadPoolExecutor(self._batch_size)
+        self._executor = ThreadPoolExecutor(self._batch_size)
 
     def run(self):
         self._is_started = 1
@@ -98,8 +99,10 @@ class workerThread(threading.Thread):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--batchsize', type=int, help='input batchsize', default=10)
     batchsize = 10
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
-    app.run(threaded=True, port=80, host='0.0.0.0')
+    app.run(threaded=True, port=5001, host='0.0.0.0')
