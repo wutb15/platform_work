@@ -7,7 +7,7 @@ import cv2
 import time
 import threading
 import queue
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future, ProcessPoolExecutor,ThreadPoolExecutor
 import json
 import argparse
 
@@ -27,18 +27,23 @@ def test():
     return json.dumps(rsp)
 
 
+
+
 class workerThread(threading.Thread):
     def __init__(self, _batch_size, request_queue):
         threading.Thread.__init__(self)
         self._batch_size = _batch_size
         self._is_started = 0
         self._req_queue = request_queue
-        self._executor = ThreadPoolExecutor(self._batch_size)
+        self._executor = ThreadPoolExecutor()
 
     def run(self):
         self._is_started = 1
         print('worker running\n')  # debug information
         self._worker()
+
+    def stop(self):
+        self._is_started = 0
 
     def _worker(self):
         while self._is_started:
@@ -71,11 +76,15 @@ class workerThread(threading.Thread):
                     continue
             except Exception as e:
                 continue
+        self._executor.shutdown(wait=True)
 
     def _do_business(self, img_url_list, recieve_ts_list):
         result_list = []
-        for result in self._executor.map(self._img_decode, img_url_list, recieve_ts_list):  # multithread process
-            result_list.append(result)
+        #executor = self._executor
+        print('do business\n')
+        with ProcessPoolExecutor() as executor:
+            for result in executor.map(self.img_decode, img_url_list, recieve_ts_list):  # multithread process
+                result_list.append(result)
 
         '''
         for i in range(len(img_url_list)):
@@ -85,8 +94,8 @@ class workerThread(threading.Thread):
             result_list.append(result)
         '''
         return result_list
-
-    def _img_decode(self, img_url, rec_ts):
+    @staticmethod
+    def img_decode(img_url, rec_ts):
         print('enter img_decode function\n')
         rec_ts = float(rec_ts)
         resp = urllib.request.urlopen(img_url)
@@ -98,9 +107,11 @@ class workerThread(threading.Thread):
         return feed_back
 
 
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--batchsize', type=int, help='input batchsize', default=10)
+    parser.add_argument('-b', '--batchsize', type=int, help='input batchsize', default=14)
     args = parser.parse_args()
     batchsize = args.batchsize
     worker = workerThread(batchsize, request_queue)
