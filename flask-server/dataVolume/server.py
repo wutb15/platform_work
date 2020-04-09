@@ -104,6 +104,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     batchsize = args.batchsize
     worker = workerThread(batchsize, request_queue)
+    worker.daemon = True
     worker.start()
     print('begins\n')
     app.run(threaded=True, port=80, host='0.0.0.0')
