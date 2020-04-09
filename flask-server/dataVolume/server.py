@@ -80,11 +80,11 @@ class workerThread(threading.Thread):
 
     def _do_business(self, img_url_list, recieve_ts_list):
         result_list = []
-        #executor = self._executor
+        executor = self._executor
         print('do business\n')
-        with ProcessPoolExecutor() as executor:
-            for result in executor.map(self.img_decode, img_url_list, recieve_ts_list):  # multithread process
-                result_list.append(result)
+        #with ProcessPoolExecutor() as executor:
+        for result in executor.map(self.img_decode, img_url_list, recieve_ts_list):  # multithread process
+            result_list.append(result)
 
         '''
         for i in range(len(img_url_list)):
