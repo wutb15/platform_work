@@ -101,7 +101,8 @@ class workerThread(threading.Thread):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--batchsize', type=int, help='input batchsize', default=10)
-    batchsize = 10
+    args = parser.parse_args()
+    batchsize = args.batchsize
     worker = workerThread(batchsize, request_queue)
     worker.start()
     print('begins\n')
