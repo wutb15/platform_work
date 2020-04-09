@@ -32,6 +32,7 @@ class workerThread(threading.Thread):
         self._batch_size = _batch_size
         self._is_started = 0
         self._req_queue = request_queue
+        self._executor  = ThreadPoolExecutor(self._batch_size)
 
     def run(self):
         self._is_started = 1
@@ -72,8 +73,7 @@ class workerThread(threading.Thread):
 
     def _do_business(self, img_url_list, recieve_ts_list):
         result_list = []
-        executor = ThreadPoolExecutor(self._batch_size)
-        for result in executor.map(self._img_decode, img_url_list, recieve_ts_list):  # multithread process
+        for result in self._executor.map(self._img_decode, img_url_list, recieve_ts_list):  # multithread process
             result_list.append(result)
 
         '''

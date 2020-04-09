@@ -1,4 +1,4 @@
 #!/bin/bash
-sudo docker container stop myflaskserver
-sudo docker container rm myflaskserver
-sudo docker image rm templeserver
+docker container stop myflaskserver
+docker container rm myflaskserver
+docker image rm templeserver
